@@ -168,13 +168,13 @@ int main(void) {
 
 		// Toggle the LEDs
 		HAL_GPIO_TogglePin(Valve_Enable_GPIO_Port, Valve_Enable_Pin);
-		HAL_Delay(200);
+		HAL_Delay(100);
 		HAL_GPIO_TogglePin(Valve_Enable_GPIO_Port, Valve_Enable_Pin);
 		HAL_GPIO_TogglePin(GPIOB, PRS_Ready_Pin);
-		HAL_Delay(200);
+		HAL_Delay(100);
 		HAL_GPIO_TogglePin(GPIOB, PRS_Ready_Pin);
 		HAL_GPIO_TogglePin(GPIOB, System_Ready_Pin);
-		HAL_Delay(200);
+		HAL_Delay(100);
 		HAL_GPIO_TogglePin(GPIOB, System_Ready_Pin);
 
 		// Measure Pressure
