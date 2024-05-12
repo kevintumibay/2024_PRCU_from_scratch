@@ -105,8 +105,8 @@ static void MX_TIM2_Init(void);
 int main(void) {
 
 	/* USER CODE BEGIN 1 */
-	uint16_t AD_RES = 0;
-	float AD_RES_float = 0;
+	uint16_t low_pressure_raw = 0;
+	float low_pressure_voltage = 0;
 	float low_pressure = 0;
 	uint16_t SPI_buffer;
 
@@ -246,20 +246,19 @@ int main(void) {
 		}
 
 		// Start ADC Conversion
-		HAL_ADC_Start(&hadc2);
+		HAL_ADC_Start(&hadc1);
 		// Poll ADC2 Peripheral & TimeOut = 1mSec
-		HAL_ADC_PollForConversion(&hadc2, 1);
+		HAL_ADC_PollForConversion(&hadc1, 1);
 		// Read The ADC Conversion Result & Print it
-		AD_RES = HAL_ADC_GetValue(&hadc2);
-		if ((float)AD_RES <= 780) {
-			AD_RES_float = 0;
+		low_pressure_raw = HAL_ADC_GetValue(&hadc1);
+		low_pressure_voltage = low_pressure_raw*3.3/(4095);
+		if (low_pressure_voltage <= 120*0.004) {
+			low_pressure = 0;
 		}
 		else {
-			AD_RES_float = (float)AD_RES - 780;
+			low_pressure = (low_pressure_voltage-120*0.004)*10000/(120*(0.02-0.004));
 		}
-		low_pressure = AD_RES_float*10/3438*1000;
-		printf("ADC value = %i mBar\r\n", (int)low_pressure);
-		HAL_Delay(1);
+		printf("Low Pressure = %i mBar\r\n", (int)low_pressure);
 
 		/* USER CODE END 3 */
 	}
