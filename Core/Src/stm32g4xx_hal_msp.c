@@ -102,7 +102,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
   /** Initializes the peripherals clocks
   */
     PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC12;
-    PeriphClkInit.Adc12ClockSelection = RCC_ADC12CLKSOURCE_SYSCLK;
+    PeriphClkInit.Adc12ClockSelection = RCC_ADC12CLKSOURCE_PLL;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
     {
       Error_Handler();
@@ -123,6 +123,9 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(Low_Pressure_ADC_GPIO_Port, &GPIO_InitStruct);
 
+    /* ADC1 interrupt Init */
+    HAL_NVIC_SetPriority(ADC1_2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
   /* USER CODE BEGIN ADC1_MspInit 1 */
 
   /* USER CODE END ADC1_MspInit 1 */
@@ -136,7 +139,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
   /** Initializes the peripherals clocks
   */
     PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC12;
-    PeriphClkInit.Adc12ClockSelection = RCC_ADC12CLKSOURCE_SYSCLK;
+    PeriphClkInit.Adc12ClockSelection = RCC_ADC12CLKSOURCE_PLL;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
     {
       Error_Handler();
@@ -157,6 +160,9 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(High_Pressure_ADC_GPIO_Port, &GPIO_InitStruct);
 
+    /* ADC2 interrupt Init */
+    HAL_NVIC_SetPriority(ADC1_2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
   /* USER CODE BEGIN ADC2_MspInit 1 */
 
   /* USER CODE END ADC2_MspInit 1 */
@@ -188,6 +194,15 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     */
     HAL_GPIO_DeInit(Low_Pressure_ADC_GPIO_Port, Low_Pressure_ADC_Pin);
 
+    /* ADC1 interrupt DeInit */
+  /* USER CODE BEGIN ADC1:ADC1_2_IRQn disable */
+    /**
+    * Uncomment the line below to disable the "ADC1_2_IRQn" interrupt
+    * Be aware, disabling shared interrupt may affect other IPs
+    */
+    /* HAL_NVIC_DisableIRQ(ADC1_2_IRQn); */
+  /* USER CODE END ADC1:ADC1_2_IRQn disable */
+
   /* USER CODE BEGIN ADC1_MspDeInit 1 */
 
   /* USER CODE END ADC1_MspDeInit 1 */
@@ -208,9 +223,95 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     */
     HAL_GPIO_DeInit(High_Pressure_ADC_GPIO_Port, High_Pressure_ADC_Pin);
 
+    /* ADC2 interrupt DeInit */
+  /* USER CODE BEGIN ADC2:ADC1_2_IRQn disable */
+    /**
+    * Uncomment the line below to disable the "ADC1_2_IRQn" interrupt
+    * Be aware, disabling shared interrupt may affect other IPs
+    */
+    /* HAL_NVIC_DisableIRQ(ADC1_2_IRQn); */
+  /* USER CODE END ADC2:ADC1_2_IRQn disable */
+
   /* USER CODE BEGIN ADC2_MspDeInit 1 */
 
   /* USER CODE END ADC2_MspDeInit 1 */
+  }
+
+}
+
+/**
+* @brief I2C MSP Initialization
+* This function configures the hardware resources used in this example
+* @param hi2c: I2C handle pointer
+* @retval None
+*/
+void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+  if(hi2c->Instance==I2C2)
+  {
+  /* USER CODE BEGIN I2C2_MspInit 0 */
+
+  /* USER CODE END I2C2_MspInit 0 */
+
+  /** Initializes the peripherals clocks
+  */
+    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C2;
+    PeriphClkInit.I2c2ClockSelection = RCC_I2C2CLKSOURCE_PCLK1;
+    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    /**I2C2 GPIO Configuration
+    PA8     ------> I2C2_SDA
+    PA9     ------> I2C2_SCL
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF4_I2C2;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    /* Peripheral clock enable */
+    __HAL_RCC_I2C2_CLK_ENABLE();
+  /* USER CODE BEGIN I2C2_MspInit 1 */
+
+  /* USER CODE END I2C2_MspInit 1 */
+  }
+
+}
+
+/**
+* @brief I2C MSP De-Initialization
+* This function freeze the hardware resources used in this example
+* @param hi2c: I2C handle pointer
+* @retval None
+*/
+void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
+{
+  if(hi2c->Instance==I2C2)
+  {
+  /* USER CODE BEGIN I2C2_MspDeInit 0 */
+
+  /* USER CODE END I2C2_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_I2C2_CLK_DISABLE();
+
+    /**I2C2 GPIO Configuration
+    PA8     ------> I2C2_SDA
+    PA9     ------> I2C2_SCL
+    */
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_8);
+
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_9);
+
+  /* USER CODE BEGIN I2C2_MspDeInit 1 */
+
+  /* USER CODE END I2C2_MspDeInit 1 */
   }
 
 }
