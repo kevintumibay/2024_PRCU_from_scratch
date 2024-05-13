@@ -128,9 +128,6 @@ int main(void) {
 	// Define variables for pod pressure sensor
 	uint16_t SPI_buffer;
 
-	// Define variables for CO2 level sensor
-	uint8_t CO2_buffer[12];
-
 	/* USER CODE END 1 */
 
 	/* MCU Configuration--------------------------------------------------------*/
@@ -203,22 +200,6 @@ int main(void) {
 
 	HAL_Delay(2000);
 
-	// Check if CO2 sensor can talk over I2C
-	if (HAL_I2C_IsDeviceReady(&hi2c2, CO2_sensor_ADDR, 5, 50) == HAL_OK) {
-		printf("CO2 sensor READY \r\n");
-	} else {
-		printf("CO2 sensor NOT READY \r\n");
-	}
-
-	// Command CO2 sensor to begin periodic measurements
-	if (HAL_I2C_Master_Transmit(&hi2c2, CO2_sensor_ADDR, CO2_sensor_start_periodic_measurement, 2, 50) == HAL_OK) {
-		printf("Periodic measurements BEGUN  \r\n");
-	} else {
-		printf("Periodic measurements NOT BEGUN \r\n");
-	}
-	printf("Waiting 6 s to set up I2C... \r\n");
-	HAL_Delay(6000);
-
 	// Define CO2 sensor commands
 	CO2_sensor_start_periodic_measurement[0] = 0x21;
 	CO2_sensor_start_periodic_measurement[1] = 0xb1;
@@ -228,6 +209,23 @@ int main(void) {
 
 	CO2_sensor_read[0] = 0xec;
 	CO2_sensor_read[1] = 0x05;
+
+	// Check if CO2 sensor can talk over I2C
+	if (HAL_I2C_IsDeviceReady(&hi2c2, CO2_sensor_ADDR, 5, 50) == HAL_OK) {
+		printf("CO2 sensor READY \r\n");
+	} else {
+		printf("CO2 sensor NOT READY \r\n");
+	}
+
+	printf("Waiting 6 s to set up I2C... \r\n");
+	// Command CO2 sensor to begin periodic measurements
+	if (HAL_I2C_Master_Transmit(&hi2c2, CO2_sensor_ADDR, CO2_sensor_start_periodic_measurement, 2, 6000) == HAL_OK) {
+		printf("Periodic measurements BEGUN  \r\n");
+	} else {
+		printf("Periodic measurements NOT BEGUN \r\n");
+	}
+	//printf("Waiting 6 s to set up I2C... \r\n");
+	//HAL_Delay(6000);
 
 	/* USER CODE END 2 */
 
@@ -326,8 +324,37 @@ int main(void) {
 		printf("High Pressure = %i Bar\r\n", (int) high_pressure);
 
 		// Check if CO2 sensor has a measurement ready
+		uint8_t CO2_sensor_data_ready_buffer[3];
 		if (HAL_I2C_Master_Transmit(&hi2c2, CO2_sensor_ADDR, CO2_sensor_data_ready, 2, 1) == HAL_OK) {
-			if (HAL_I2C_Master_Receive(&hi2c2, CO2_sensor_ADDR | 0x01, CO2_buffer, 9, 50) == HAL_OK) {
+			if (HAL_I2C_Master_Receive(&hi2c2, CO2_sensor_ADDR, CO2_sensor_data_ready_buffer, 3, 1) == HAL_OK) {
+				printf("CO2 sensor has measurement ready \r\n");
+				printf("Response to data ready = %i - %i \r\n", (int)CO2_sensor_data_ready_buffer[0], (int)CO2_sensor_data_ready_buffer[1]);
+
+				// Create buffer to store CO2 measurement
+				uint8_t CO2_measurement[12];
+				// Write command to read CO2 measurement
+				if (HAL_I2C_Master_Transmit(&hi2c2, CO2_sensor_ADDR, CO2_sensor_read, 2, 1) == HAL_OK) {
+					//Read CO2 measurement
+					if(HAL_I2C_Master_Receive(&hi2c2, CO2_sensor_ADDR, CO2_measurement, 9, 1) == HAL_OK) {
+						//printf("CO2 SENSOR DATA = i% - i% \r\n", CO2_measurement[0], CO2_measurement[1]);
+					}
+					else {
+						printf("Failed to receive read command \r\n");
+					}
+				}
+				/*else {
+					printf("Failed to transmit read command \r\n");
+				}*/
+			}
+		}
+		else {
+			printf("CO2 sensor DOES NOT HAVE A MEASUREMENT READY\r\n");
+		}
+
+		// Check if CO2 sensor has a measurement ready
+		/*
+		if (HAL_I2C_Master_Transmit(&hi2c2, CO2_sensor_ADDR, CO2_sensor_data_ready, 2, 1) == HAL_OK) {
+			if (HAL_I2C_Master_Receive(&hi2c2, CO2_sensor_ADDR, CO2_buffer, 9, 50) == HAL_OK) {
 				printf("CO2 sensor RECEIVING, data = %i %i - %i %i - %i %i \r\n", (int) CO2_buffer[0], (int) CO2_buffer[1], (int) CO2_buffer[3], (int) CO2_buffer[4], (int) CO2_buffer[6], (int) CO2_buffer[7]);
 			} else {
 				printf("CO2 sensor NOT RECEIVING \r\n");
@@ -335,6 +362,7 @@ int main(void) {
 		} else {
 			printf("CO2 sensor DOES NOT HAVE A MEASUREMENT READY\r\n");
 		}
+		*/
 
 		/*
 		// Read measurement from CO2 sensor
