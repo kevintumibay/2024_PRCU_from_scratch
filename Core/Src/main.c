@@ -87,6 +87,10 @@ uint8_t CO2_sensor_start_periodic_measurement[2];
 uint8_t CO2_sensor_data_ready[2];
 // Read data command
 uint8_t CO2_sensor_read[2];
+// CO2 sensor data buffer
+uint8_t CO2_buffer[18];
+// CO2 sensor self test
+uint8_t CO2_sensor_perform_self_test[2] = {0x36,0x39};
 
 /* USER CODE END PV */
 
@@ -225,13 +229,14 @@ int main(void) {
 		printf("CO2 sensor NOT READY \r\n");
 	}
 
-	printf("Waiting 6 s to set up I2C... \r\n");
 	// Command CO2 sensor to begin periodic measurements
+	/*
 	if (HAL_I2C_Master_Transmit(&hi2c2, CO2_sensor_ADDR, CO2_sensor_start_periodic_measurement, 1, 1) == HAL_OK) {
 		printf("Periodic measurements BEGUN  \r\n");
 	} else {
 		printf("Periodic measurements NOT BEGUN \r\n");
 	}
+	*/
 
 	/* USER CODE END 2 */
 
@@ -329,14 +334,46 @@ int main(void) {
 		}
 		printf("High Pressure = %i Bar\r\n", (int) high_pressure);
 
+		// Test that CO2 sensor works
+		if (HAL_I2C_Master_Transmit(&hi2c2, CO2_sensor_ADDR, CO2_sensor_perform_self_test, 1, HAL_MAX_DELAY) == HAL_OK) {
+			if (HAL_I2C_Master_Receive(&hi2c2, CO2_sensor_ADDR, CO2_buffer, 3, HAL_MAX_DELAY) == HAL_OK) {
+				printf("Self test complete \r\n");
+			}
+			else {
+				printf("Rx error \r\n");
+			}
+		}
+		else {
+			printf("Tx error \r\n");
+		}
+
+		/*
+		// Get CO2 sensor measurement
+		if (HAL_I2C_Master_Transmit(&hi2c2, CO2_sensor_ADDR, CO2_sensor_read, 2, HAL_MAX_DELAY) != HAL_OK) {
+			printf("Error Tx\r\n");
+		} else {
+			// Read 2 bytes from the temperature register
+			if (HAL_I2C_Master_Receive(&hi2c2, CO2_sensor_ADDR, CO2_buffer, 18, HAL_MAX_DELAY) != HAL_OK) {
+				printf("Error Rx\r\n");
+			} else {
+				printf("Data received\r\n");
+			}
+		}
+		*/
+
+
+
 		// Check if CO2 sensor has a measurement ready
+
+		/*
+
 		uint8_t CO2_sensor_data_ready_buffer[3];
 		if (HAL_I2C_Master_Transmit(&hi2c2, CO2_sensor_ADDR, CO2_sensor_data_ready, 1, 1) == HAL_OK) {
-			if (HAL_I2C_Master_Receive(&hi2c2, CO2_sensor_ADDR | 0x01, CO2_sensor_data_ready_buffer, 3, 1) == HAL_OK) {
+			if (HAL_I2C_Master_Receive(&hi2c2, CO2_sensor_ADDR, CO2_sensor_data_ready_buffer, 3, 1) == HAL_OK) {
 				printf("CO2 sensor has measurement ready \r\n");
 				printf("Response to data ready = %i - %i \r\n", (int)CO2_sensor_data_ready_buffer[0], (int)CO2_sensor_data_ready_buffer[1]);
 
-				/*
+
 				// Create buffer to store CO2 measurement
 				uint8_t CO2_measurement[12];
 				// Write command to read CO2 measurement
@@ -352,7 +389,7 @@ int main(void) {
 				else {
 					printf("Failed to transmit read command \r\n");
 				}
-				*/
+
 			}
 			else{
 				printf("no receive \r\n");
@@ -361,6 +398,8 @@ int main(void) {
 		else {
 			printf("CO2 sensor DOES NOT HAVE A MEASUREMENT READY\r\n");
 		}
+
+		*/
 
 		// Check if CO2 sensor has a measurement ready
 		/*
